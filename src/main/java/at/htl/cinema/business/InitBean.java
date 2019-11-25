@@ -1,6 +1,7 @@
 package at.htl.cinema.business;
 
 import at.htl.cinema.model.Cinema;
+import at.htl.cinema.model.Employee;
 import at.htl.cinema.model.Hall;
 import io.quarkus.runtime.StartupEvent;
 
@@ -10,6 +11,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,5 +41,46 @@ public class InitBean {
         halls.add(new Hall("Saal 3", 184, cineplexGraz));
         em.persist(cineplexGraz);
         for (Hall hall : halls) em.persist(hall);
+
+
+        //Panache
+        Employee emp = new Employee(
+                "Maxi",
+                "Mustermann",
+                2299,
+                "12343",
+                LocalDate.of(2005, Month.JANUARY,1),
+                cineplexLinz
+        );
+        emp.persist();
+
+        emp = new Employee(
+                "Hubert",
+                "Mustermann",
+                1999,
+                "12344",
+                LocalDate.of(2006, Month.JANUARY,1),
+                cineplexLinz
+        );
+        emp.persist();
+
+        emp = new Employee(
+                "Franz",
+                "Schubert",
+                2299,
+                "12345",
+                LocalDate.of(2005, Month.JANUARY,1),
+                cineplexGraz
+        );
+        emp.persist();
+        emp = new Employee(
+                "Hans",
+                "Schuster",
+                2299,
+                "12346",
+                LocalDate.of(2005, Month.JANUARY,1),
+                cineplexGraz
+        );
+        emp.persist();
     }
 }

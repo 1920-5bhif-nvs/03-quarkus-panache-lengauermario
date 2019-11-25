@@ -1,6 +1,35 @@
 = Cinema - Mario Lengauer
 :source-highlighter: coderay
 :sourcedir: src/main/java/at/htl/cinema
+:toc:
+
+== Übersicht
+=== Klassendiagramm
+image::images/CLD.PNG[]
+
+
+=== ERD
+image::images/erd.PNG[]
+
+=== Use-Cases
+[plantuml]
+----
+left to right direction
+skinparam packageStyle rectangle
+actor cinemaboss as "Geschäftschäftsführer"
+
+rectangle checkout {
+usecase UC1 as "Ein neues Kino in den Bestand aufnehemn"
+usecase UC2 as "Einen neuen Saal hinzufügen"
+usecase UC3 as "Mitarbeiter hinzufügen"
+usecase UC3 as "Mitarbeiter der einzelnen Kinos ansehen"
+
+cinemaboss --> UC1
+cinemaboss --> UC2
+cinemaboss --> UC3
+}
+----
+
 
 == Erstellung des Projektes
 
@@ -13,29 +42,7 @@ mvn io.quarkus:quarkus-maven-plugin:1.0.0.CR1:create \
     -Dpath="/cinema"
 ----
 
-== Starten des Projektes
-
-=== Hibernate
-
-==== 1. Dependencies eintragen
-[source]
-----
-<dependencies>
-    <!-- Hibernate ORM specific dependencies -->
-    <dependency>
-        <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-hibernate-orm</artifactId>
-    </dependency>
-
-    <!-- JDBC driver dependencies -->
-    <dependency>
-        <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-jdbc-postgresql</artifactId>
-    </dependency>
-</dependencies>
-----
-
-==== 2. DB konfigurieren
+=== DB konfigurieren
 in application.properties folgendes eintragen:
 [source]
 ----
@@ -48,25 +55,75 @@ quarkus.datasource.max-size=13
 quarkus.hibernate-orm.database.generation=drop-and-create
 ----
 
-==== 3. Entität erstellen
+=== Dependencies hinzufügen
+für Hibernate
+[source,xml]
+----
+include::pom.xml[lines=44..51]
+----
+und für Panache ist dieses auch noch nötig
+[source,xml]
+----
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-hibernate-orm-panache</artifactId>
+    </dependency>
+----
+=== LocalDate
+[source]
+----
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-jackson</artifactId>
+    </dependency>
+----
+Usage
 [source,java]
 ----
-include::{sourcedir}/model/Cinema.java[lines=9..35;77..78]
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate date;
 ----
-==== 4. InitBean erstellen
-[source, java]
+=== Swagger UI
+Extension installieren
+[source]
 ----
-include::{sourcedir}/business/InitBean.java[lines=17..41]
+mvnw quarkus:add-extension -Dextensions="openapi"
 ----
-== Docker Container Starten
+Erreichbar unter
+
+[source]
+----
+http://localhost:8080/swagger-ui/
+----
+== Projekt starten
+=== Db im Docker Container Starten
 [source]
 ----
 docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=passme -d postgres
 ----
 
-== Rest Service im Dev Mode starten:
+=== Quarkus im Dev Mode starten
 [source]
 ----
 mvnw compile quarkus:dev
 ----
 
+=== Quarkus im Docker starten
+[source]
+----
+mvnw clean package
+docker build -f src/main/docker/Dockerfile.jvm -t quarkus/cinema .
+docker run -i --rm -p 8080:8080 quarkus/cinema
+----
+Da ich die DockerToolbox verwende ist der Service erreichbar unter
+[source]
+----
+http://192.168.99.100:8080/cinema
+----
+
+== Unterschied Panache Hibernate
+
+Einziger Nachteil von Panache den ich sehe, ist die noch sehr spärliche Dokumentation. Das erschwert das Programmieren erheblich, da man kaum Antworten auf die Probleme findet.
+Ansonsten spart man sich durch Panache einigen Aufwand. z.B. eigenes Facade
